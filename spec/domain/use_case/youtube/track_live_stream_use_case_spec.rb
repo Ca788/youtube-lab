@@ -3,13 +3,17 @@
 require "rails_helper"
 
 RSpec.describe UseCase::Youtube::TrackLiveStreamUseCase do
-  subject(:use_case) { described_class.new(sync_use_case: sync_use_case) }
+  subject(:use_case) do
+    described_class.new(sync_use_case: sync_use_case, poll_use_case: poll_use_case)
+  end
 
   let(:user) { create(:user) }
   let(:sync_use_case) { instance_double(UseCase::Youtube::SyncLiveStreamUseCase) }
+  let(:poll_use_case) { instance_double(UseCase::Youtube::PollChatMessagesUseCase) }
 
   before do
     allow(sync_use_case).to receive(:call) { |live_stream:| live_stream }
+    allow(poll_use_case).to receive(:call)
   end
 
   it "creates a tracked stream from a watch url" do

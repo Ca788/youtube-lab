@@ -2,8 +2,13 @@
 
 class UseCase::Youtube::TrackLiveStreamUseCase
   # @param [UseCase::Youtube::SyncLiveStreamUseCase] sync_use_case
-  def initialize(sync_use_case: UseCase::Youtube::SyncLiveStreamUseCase.new)
+  # @param [UseCase::Youtube::PollChatMessagesUseCase] poll_use_case
+  def initialize(
+    sync_use_case: UseCase::Youtube::SyncLiveStreamUseCase.new,
+    poll_use_case: UseCase::Youtube::PollChatMessagesUseCase.new
+  )
     @sync_use_case = sync_use_case
+    @poll_use_case = poll_use_case
   end
 
   # @param [User] user
@@ -16,6 +21,8 @@ class UseCase::Youtube::TrackLiveStreamUseCase
     live_stream.tracking = true
     live_stream.save!
 
-    @sync_use_case.call(live_stream: live_stream)
+    live_stream = @sync_use_case.call(live_stream: live_stream)
+    @poll_use_case.call(live_stream: live_stream)
+    live_stream
   end
 end

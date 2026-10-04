@@ -28,6 +28,23 @@ RSpec.describe "Api::V1::Youtube::LiveStreams", type: :request do
   before do
     allow(YoutubeApi::ClientFactory).to receive(:build).and_return(client)
     allow(client).to receive(:fetch_video).and_return(YoutubeApi::VideoSnapshot.from_api(video_payload))
+    allow(client).to receive(:fetch_chat_page).and_return(
+      YoutubeApi::ChatPage.from_api(
+        "items" => [
+          {
+            "id" => "msg-1",
+            "snippet" => {
+              "type" => "textMessageEvent",
+              "publishedAt" => "2026-10-03T22:00:00Z",
+              "displayMessage" => "oi"
+            },
+            "authorDetails" => { "channelId" => "UC_ana", "displayName" => "Ana" }
+          }
+        ],
+        "nextPageToken" => "next-token",
+        "pollingIntervalMillis" => 4000
+      )
+    )
   end
 
   describe "GET /api/v1/youtube/live_streams" do
@@ -163,6 +180,8 @@ RSpec.describe "Api::V1::Youtube::LiveStreams", type: :request do
       live_stream = user.live_streams.sole
       expect(live_stream.viewer_samples.count).to eq(1)
       expect(live_stream.viewer_samples.sole.concurrent_viewers).to eq(1234)
+      expect(live_stream.chat_messages.count).to eq(1)
+      expect(live_stream.chat_messages.sole.text).to eq("oi")
     end
 
     it "rejects a url without a video id" do
@@ -212,6 +231,7 @@ RSpec.describe "Api::V1::Youtube::LiveStreams", type: :request do
       expect(response).to have_http_status(:ok)
       expect(live_stream.reload.concurrent_viewers).to eq(1234)
       expect(live_stream.viewer_samples.count).to eq(1)
+      expect(live_stream.chat_messages.count).to eq(1)
     end
 
     it "does not touch a stream of another user" do

@@ -10,11 +10,17 @@ module YoutubeApi
 
     VIDEO_FIELDS = "items(" \
                    "id," \
-                   "snippet(title,channelId,channelTitle,liveBroadcastContent)," \
+                   "snippet(title,channelId,channelTitle,liveBroadcastContent,categoryId," \
+                   "thumbnails(medium/url,high/url))," \
                    "liveStreamingDetails(scheduledStartTime,actualStartTime,actualEndTime," \
                    "concurrentViewers,activeLiveChatId)," \
                    "statistics(viewCount,likeCount)" \
                    ")"
+
+    SEARCH_FIELDS = "nextPageToken,prevPageToken,pageInfo(totalResults,resultsPerPage)," \
+                    "items(id/videoId)"
+
+    CATEGORY_FIELDS = "items(id,snippet(title,assignable))"
 
     CHAT_FIELDS = "nextPageToken,pollingIntervalMillis,offlineAt," \
                   "items(id," \
@@ -47,6 +53,67 @@ module YoutubeApi
 
       item = payload["items"].to_a.first
       item.present? ? VideoSnapshot.from_api(item) : nil
+    end
+
+    # @param [Array<String>] video_ids
+    # @return [Array<YoutubeApi::VideoSnapshot>]
+    def fetch_videos(video_ids:)
+      ids = Array(video_ids).filter_map { |id| id.to_s.strip.presence }.uniq
+      return [] if ids.empty?
+
+      payload = get(
+        "youtube/v3/videos",
+        part:   "snippet,liveStreamingDetails,statistics",
+        id:     ids.join(","),
+        fields: VIDEO_FIELDS
+      )
+
+      payload["items"].to_a.map { |item| VideoSnapshot.from_api(item) }
+    end
+
+    # @param [String, nil] q
+    # @param [String, nil] category_id
+    # @param [String] region_code
+    # @param [String] relevance_language
+    # @param [String, nil] page_token
+    # @param [Integer] max_results
+    # @return [YoutubeApi::SearchPage]
+    def search_live_videos(
+      q: nil,
+      category_id: nil,
+      region_code: "BR",
+      relevance_language: "pt",
+      page_token: nil,
+      max_results: 12
+    )
+      payload = get(
+        "youtube/v3/search",
+        part:               "snippet",
+        type:               "video",
+        eventType:          "live",
+        q:                  q,
+        videoCategoryId:    category_id,
+        regionCode:         region_code,
+        relevanceLanguage:  relevance_language,
+        pageToken:          page_token,
+        maxResults:         max_results,
+        fields:             SEARCH_FIELDS
+      )
+
+      SearchPage.from_api(payload)
+    end
+
+    # @param [String] region_code
+    # @return [Array<YoutubeApi::VideoCategory>]
+    def fetch_video_categories(region_code: "BR")
+      payload = get(
+        "youtube/v3/videoCategories",
+        part:       "snippet",
+        regionCode: region_code,
+        fields:     CATEGORY_FIELDS
+      )
+
+      payload["items"].to_a.map { |item| VideoCategory.from_api(item) }
     end
 
     # @param [String] live_chat_id

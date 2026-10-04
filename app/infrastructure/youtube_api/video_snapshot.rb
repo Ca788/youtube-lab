@@ -15,6 +15,8 @@ module YoutubeApi
       concurrent_viewers
       total_view_count
       like_count
+      thumbnail_url
+      category_id
     ].freeze
 
     attr_reader(*ATTRIBUTE_KEYS)
@@ -26,9 +28,10 @@ module YoutubeApi
     # @param [Hash] item
     # @return [YoutubeApi::VideoSnapshot]
     def self.from_api(item)
-      snippet = item["snippet"].to_h
-      details = item["liveStreamingDetails"].to_h
-      stats   = item["statistics"].to_h
+      snippet    = item["snippet"].to_h
+      details    = item["liveStreamingDetails"].to_h
+      stats      = item["statistics"].to_h
+      thumbnails = snippet["thumbnails"].to_h
 
       new(
         video_id:           item["id"],
@@ -42,7 +45,9 @@ module YoutubeApi
         actual_end_at:      parse_time(details["actualEndTime"]),
         concurrent_viewers: details["concurrentViewers"]&.to_i,
         total_view_count:   stats["viewCount"]&.to_i,
-        like_count:         stats["likeCount"]&.to_i
+        like_count:         stats["likeCount"]&.to_i,
+        thumbnail_url:      thumbnails.dig("medium", "url").presence || thumbnails.dig("high", "url"),
+        category_id:        snippet["categoryId"]
       )
     end
 
@@ -69,6 +74,11 @@ module YoutubeApi
     # @return [Boolean]
     def live?
       status == Youtube::LiveStream::STATUSES[:live]
+    end
+
+    # @return [String]
+    def watch_url
+      "https://www.youtube.com/watch?v=#{video_id}"
     end
 
     # @return [Hash]

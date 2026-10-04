@@ -45,9 +45,9 @@ class Api::V1::Youtube::LiveStreamsController < Api::BaseController
   end
 
   def sync
-    live_stream = UseCase::Youtube::SyncLiveStreamUseCase.new.call(
-      live_stream: @user.live_streams.find(params[:id])
-    )
+    live_stream = @user.live_streams.find(params[:id])
+    live_stream = UseCase::Youtube::SyncLiveStreamUseCase.new.call(live_stream: live_stream)
+    UseCase::Youtube::PollChatMessagesUseCase.new.call(live_stream: live_stream)
 
     render json: ApiResponseSerializer.render(
       live_stream,

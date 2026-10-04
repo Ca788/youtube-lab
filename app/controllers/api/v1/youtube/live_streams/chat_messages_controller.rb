@@ -8,8 +8,6 @@ class Api::V1::Youtube::LiveStreams::ChatMessagesController < Api::BaseControlle
       **filters
     ).page(page_param).per(per_page_param)
 
-    return unless stale_collection?(messages)
-
     render json: ApiResponseSerializer.render_data_array(
       messages,
       serializer:      V1::Youtube::ChatMessageSerializer,

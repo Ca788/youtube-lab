@@ -13,6 +13,11 @@ Rails.application.routes.draw do
       resource :user, only: [:show, :create], controller: "user"
 
       namespace :youtube do
+        namespace :catalog do
+          resources :live_streams, only: [:index]
+          resources :categories, only: [:index]
+        end
+
         resources :live_streams, only: [:index, :show, :create, :destroy] do
           member do
             post :sync

@@ -13,7 +13,9 @@ RSpec.describe YoutubeApi::VideoSnapshot do
           "title" => "Live de teste",
           "channelId" => "UC_canal",
           "channelTitle" => "Canal de Teste",
-          "liveBroadcastContent" => "live"
+          "liveBroadcastContent" => "live",
+          "categoryId" => "25",
+          "thumbnails" => { "medium" => { "url" => "https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg" } }
         },
         "liveStreamingDetails" => {
           "actualStartTime" => "2026-10-03T21:00:00Z",
@@ -33,6 +35,9 @@ RSpec.describe YoutubeApi::VideoSnapshot do
       expect(snapshot.concurrent_viewers).to eq(1234)
       expect(snapshot.total_view_count).to eq(5000)
       expect(snapshot.like_count).to eq(321)
+      expect(snapshot.thumbnail_url).to eq("https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg")
+      expect(snapshot.category_id).to eq("25")
+      expect(snapshot.watch_url).to eq("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
       expect(snapshot).to be_live
     end
 

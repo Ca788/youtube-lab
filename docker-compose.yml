@@ -14,5 +14,66 @@ services:
     ports:
       - "6380:6379"
 
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    stdin_open: true
+    tty: true
+    command:
+      - bash
+      - -c
+      - >-
+        bundle check || bundle install --jobs 4 --retry 3
+        && rm -f tmp/pids/server.pid
+        && bundle exec rails db:prepare
+        && bundle exec rails server -b 0.0.0.0 -p 8080
+    volumes:
+      - .:/app
+      - bundle_cache:/usr/local/bundle
+    ports:
+      - "3000:8080"
+    depends_on:
+      - db
+      - redis
+    env_file: .env
+    environment:
+      RAILS_ENV: development
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      DB_HOST: db
+      DB_PORT: 5432
+      REDIS_URL: redis://redis:6379/0
+      DATABASE_URL: postgres://postgres:postgres@db:5432/youtube_lab_development
+      FRONTEND_ORIGIN: http://localhost:5148
+
+  sidekiq:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command:
+      - bash
+      - -c
+      - >-
+        bundle check || bundle install --jobs 4 --retry 3
+        && bundle exec sidekiq -C config/sidekiq.yml
+    volumes:
+      - .:/app
+      - bundle_cache:/usr/local/bundle
+    depends_on:
+      - db
+      - redis
+    env_file: .env
+    environment:
+      RAILS_ENV: development
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      DB_HOST: db
+      DB_PORT: 5432
+      REDIS_URL: redis://redis:6379/0
+      DATABASE_URL: postgres://postgres:postgres@db:5432/youtube_lab_development
+      FRONTEND_ORIGIN: http://localhost:5148
+
 volumes:
   postgres_data:
+  bundle_cache:

@@ -19,6 +19,7 @@ class Rack::Attack
   DIRECT_UPLOADS_PATH = "/rails/active_storage/direct_uploads"
 
   QUOTA_PATHS = %r{\A/api/v1/youtube/live_streams(/[^/]+/sync)?\z}
+  CATALOG_LIVES_PATH = "/api/v1/youtube/catalog/live_streams"
 
   MAX_INSPECTED_BODY_BYTES = 8.kilobytes
 
@@ -85,6 +86,14 @@ class Rack::Attack
 
   throttle("youtube_quota/ip", limit: 60, period: 1.hour) do |req|
     req.client_ip if req.post? && req.path.match?(QUOTA_PATHS)
+  end
+
+  throttle("youtube_catalog/token", limit: 6, period: 1.minute) do |req|
+    req.auth_token_fingerprint if req.get? && req.path == CATALOG_LIVES_PATH
+  end
+
+  throttle("youtube_catalog/ip", limit: 20, period: 1.hour) do |req|
+    req.client_ip if req.get? && req.path == CATALOG_LIVES_PATH
   end
 
   self.blocklisted_responder = lambda do |_request|

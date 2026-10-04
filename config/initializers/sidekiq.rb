@@ -9,6 +9,15 @@ redis_config = {
 
 Sidekiq.configure_server do |config|
   config.redis = redis_config
+
+  config.on(:startup) do
+    schedule_file = Rails.root.join("config/schedule.yml")
+    next unless schedule_file.exist?
+
+    Sidekiq::Cron::Job.load_from_hash(
+      YAML.safe_load(ERB.new(schedule_file.read).result, aliases: true)
+    )
+  end
 end
 
 Sidekiq.configure_client do |config|
