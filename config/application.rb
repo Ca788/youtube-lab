@@ -32,13 +32,21 @@ module YoutubeLab
     #
     # These settings can be overridden in specific environments using the files
     # in config/environments, which are processed later.
-    #
-    # config.time_zone = "Central Time (US & Canada)"
-    # config.eager_load_paths << Rails.root.join("extras")
+
+    # YouTube returns timestamps in UTC; civil dates are read in Brazil timezone.
+    config.time_zone = "America/Sao_Paulo"
+    config.eager_load_paths << Rails.root.join("app", "domain")
+    config.eager_load_paths << Rails.root.join("app", "infrastructure")
 
     # Only loads a smaller set of middleware suitable for API only apps.
     # Middleware like session, flash, cookies can be added back manually.
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
+
+    config.active_job.queue_adapter = :sidekiq
+
+    config.generators do |g|
+      g.orm :active_record, primary_key_type: :uuid
+    end
   end
 end

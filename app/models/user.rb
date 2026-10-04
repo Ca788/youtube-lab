@@ -1,0 +1,15 @@
+# frozen_string_literal: true
+
+class User < ApplicationRecord
+  include Devise::JWT::RevocationStrategies::JTIMatcher
+
+  devise :database_authenticatable,
+         :recoverable,
+         :validatable,
+         :jwt_authenticatable,
+         jwt_revocation_strategy: self
+
+  has_many :live_streams, class_name: "Youtube::LiveStream", dependent: :destroy
+
+  validates :name, presence: true
+end
