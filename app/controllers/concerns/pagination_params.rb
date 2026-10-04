@@ -1,0 +1,28 @@
+# frozen_string_literal: true
+
+module PaginationParams
+  extend ActiveSupport::Concern
+
+  def per_page_param(limit: 100, default: 25)
+    per_page = params[:perPage]&.to_i || params[:per_page]&.to_i || default
+    return default if per_page < 1
+    return limit if per_page > limit
+    per_page
+  end
+
+  def page_param
+    page = params[:page]&.to_i || 1
+    return 1 if page < 1
+    page
+  end
+
+  def pagination_for(relation)
+    {
+      currentPage: relation.current_page,
+      nextPage: relation.next_page,
+      prevPage: relation.prev_page,
+      totalPages: relation.total_pages,
+      totalCount: relation.total_count
+    }
+  end
+end

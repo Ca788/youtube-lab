@@ -1,0 +1,12 @@
+---
+:position: before
+:exclude_factories: true
+:exclude_fixtures: true
+:exclude_tests: true
+:exclude_serializers: true
+:exclude_scaffolds: true
+:exclude_controllers: true
+:exclude_helpers: true
+:show_indexes: true
+:show_foreign_keys: true
+:classified_sort: true

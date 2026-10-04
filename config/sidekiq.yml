@@ -1,0 +1,5 @@
+:concurrency: <%= ENV.fetch("SIDEKIQ_CONCURRENCY", 5) %>
+:queues:
+  - [youtube, 4]
+  - default
+  - mailers

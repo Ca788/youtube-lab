@@ -1,0 +1,5 @@
+poll_youtube_live_streams:
+  cron: "<%= ENV.fetch('YOUTUBE_POLL_CRON', '* * * * *') %>"
+  class: "Youtube::EnqueuePollingJob"
+  queue: youtube
+  description: "Atualiza viewers e captura o chat das lives marcadas como tracking."
